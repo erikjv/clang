@@ -2042,7 +2042,9 @@ Sema::DiagnoseEmptyLookup(Scope *S, CXXScopeSpec &SS, LookupResult &R,
   }
 
   // Give up, we can't recover.
-  Diag(R.getNameLoc(), diagnostic) << Name;
+  auto Builder = Diag(R.getNameLoc(), diagnostic) << Name;
+  if (Name.isIdentifier())
+    Builder << SourceRange(R.getNameLoc());
   return true;
 }
 

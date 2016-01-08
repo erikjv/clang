@@ -1323,8 +1323,11 @@ static QualType ConvertDeclSpecToType(TypeProcessingState &state) {
       // specifiers in each declaration, and in the specifier-qualifier list in
       // each struct declaration and type name."
       if (S.getLangOpts().CPlusPlus) {
+        auto R = DS.getSourceRange();
+        if (R.getEnd().isInvalid())
+          R.setEnd(R.getBegin());
         S.Diag(DeclLoc, diag::err_missing_type_specifier)
-          << DS.getSourceRange();
+          << R;
 
         // When this occurs in C++ code, often something is very broken with the
         // value being declared, poison it as invalid so we don't get chains of
