@@ -690,9 +690,7 @@ std::pair<unsigned, bool> Lexer::ComputePreamble(StringRef Buffer,
   } while (true);
   
   SourceLocation End;
-  if (IfCount)
-    End = IfStartTok.getLocation();
-  else if (ActiveCommentLoc.isValid())
+  if (ActiveCommentLoc.isValid())
     End = ActiveCommentLoc; // don't truncate a decl comment.
   else
     End = TheTok.getLocation();
@@ -2540,6 +2538,11 @@ bool Lexer::LexEndOfFile(Token &Result, const char *CurPtr) {
     return true;
   }
   
+  if (PP->IsRecordingPreamble()) {
+    PP->setRecordedPreambleConditionalStack(ConditionalStack);
+    ConditionalStack.clear();
+  }
+
   // Issue diagnostics for unterminated #if and missing newline.
 
   // If we are in a #if directive, emit an error.

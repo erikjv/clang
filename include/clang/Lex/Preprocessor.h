@@ -281,6 +281,58 @@ class Preprocessor : public RefCountedBase<Preprocessor> {
   /// This is used when loading a precompiled preamble.
   std::pair<int, bool> SkipMainFilePreamble;
 
+  class PreambleConditionalStackStore {
+  public:
+    enum State {
+      Off = 0,
+      Recording = 1,
+      Replaying = 2,
+      Done = 3
+    };
+    typedef SmallVector<PPConditionalInfo, 4> Stack;
+
+    PreambleConditionalStackStore()
+      : ConditionalStack(nullptr, Off)
+    {}
+    ~PreambleConditionalStackStore()
+    { delete ConditionalStack.getPointer(); }
+
+    void setState(State s) {
+      ConditionalStack.setInt(s);
+    }
+
+    void startRecording() { ConditionalStack.setInt(Recording); }
+    bool isRecording() const { return ConditionalStack.getInt() == Recording; }
+    bool isReplaying() const { return ConditionalStack.getInt() == Replaying; }
+
+    const Stack &getStack() const {
+      assert(ConditionalStack.getPointer());
+      return *ConditionalStack.getPointer();
+    }
+
+    void doneReplaying() {
+      assert(ConditionalStack.getPointer());
+      delete ConditionalStack.getPointer();
+      ConditionalStack.setPointer(nullptr);
+      setState(Done);
+    }
+
+    void setStack(const Stack &s)
+    {
+      if (!isRecording() && !isReplaying())
+        return;
+      if (auto ptr = ConditionalStack.getPointer())
+        *ptr = s;
+      else
+        ConditionalStack.setPointer(new Stack(s));
+    }
+
+    bool HasRecordedPreamble() const { return ConditionalStack.getPointer(); }
+
+  private:
+    llvm::PointerIntPair<Stack *, 2, State> ConditionalStack;
+  } PreambleConditionalStack;
+
   /// \brief The current top of the stack that we're lexing from if
   /// not expanding a macro and we are lexing directly from source code.
   ///
@@ -1917,6 +1969,28 @@ public:
   ///         appropriate.
   const FileEntry *getModuleHeaderToIncludeForDiagnostics(SourceLocation IncLoc,
                                                           SourceLocation MLoc);
+
+  bool IsRecordingPreamble() const {
+    return PreambleConditionalStack.isRecording();
+  }
+
+  bool HasRecordedPreamble() const {
+    return PreambleConditionalStack.HasRecordedPreamble();
+  }
+
+  const SmallVector<PPConditionalInfo, 4> &getPreambleConditionalStack() const
+  { return PreambleConditionalStack.getStack(); }
+
+  void setRecordedPreambleConditionalStack(
+      const SmallVector<PPConditionalInfo, 4> &s) {
+    PreambleConditionalStack.setStack(s);
+  }
+
+  void setReplayablePreambleConditionalStack(
+      const SmallVector<PPConditionalInfo, 4> &s) {
+    PreambleConditionalStack.setState(PreambleConditionalStackStore::Replaying);
+    PreambleConditionalStack.setStack(s);
+  }
 
 private:
   // Macro handling.

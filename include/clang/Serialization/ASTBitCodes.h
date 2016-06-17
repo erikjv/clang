@@ -585,6 +585,8 @@ namespace clang {
       /// \brief Number of unmatched #pragma clang cuda_force_host_device begin
       /// directives we've seen.
       CUDA_PRAGMA_FORCE_HOST_DEVICE_DEPTH = 57,
+
+      PP_CONDITIONAL_STACK = 58,
     };
 
     /// \brief Record types used within a source manager block.

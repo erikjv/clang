@@ -176,6 +176,9 @@ public:
   conditional_iterator conditional_end() const { 
     return ConditionalStack.end(); 
   }
+
+  void setConditionalLevels(const SmallVector<PPConditionalInfo, 4> &CL)
+  { ConditionalStack = CL; }
 };
 
 }  // end namespace clang

@@ -80,6 +80,8 @@ public:
   /// The boolean indicates whether the preamble ends at the start of a new
   /// line.
   std::pair<unsigned, bool> PrecompiledPreambleBytes;
+
+  bool PreambleGeneration = false;
   
   /// The implicit PTH input included at the start of the translation unit, or
   /// empty.

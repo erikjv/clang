@@ -150,6 +150,9 @@ Preprocessor::Preprocessor(IntrusiveRefCntPtr<PreprocessorOptions> PPOpts,
     Ident_GetExceptionInfo = Ident_GetExceptionCode = nullptr;
     Ident_AbnormalTermination = nullptr;
   }
+
+  if (this->PPOpts->PreambleGeneration)
+    PreambleConditionalStack.startRecording();
 }
 
 Preprocessor::~Preprocessor() {

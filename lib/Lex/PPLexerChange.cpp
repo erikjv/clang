@@ -129,6 +129,11 @@ void Preprocessor::EnterSourceFileWithLexer(Lexer *TheLexer,
     Callbacks->FileChanged(CurLexer->getFileLoc(),
                            PPCallbacks::EnterFile, FileType);
   }
+
+  if (PreambleConditionalStack.isReplaying()) {
+    CurPPLexer->setConditionalLevels(PreambleConditionalStack.getStack());
+    PreambleConditionalStack.doneReplaying();
+  }
 }
 
 /// EnterSourceFileWithPTH - Add a source file to the top of the include stack
